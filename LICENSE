@@ -19,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-This license covers this plugin's own original content: the `agents-with-taste` router skill
-and the `hooks/` directory (`hooks.json`, `taste-nudge.sh`). It does NOT cover the vendored
-`skills/{emil-design-eng,animate,animate-expo,apple-design,animation-vocabulary,ask-sonner,
-find-animation-opportunities,improve-animations,mobile-native,pick-ui-library,prototype,
-review-animations,write-swift}/` directories, which are Emil Kowalski's own work, separately
-licensed — see `EMIL-KOWALSKI-LICENSE` at this repo's root.

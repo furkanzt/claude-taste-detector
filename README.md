@@ -61,3 +61,13 @@ To bring in a newer commit of Emil's own skills, re-run the same vendoring proce
 commit SHA and re-diff by hand before committing — this repo pins a specific commit deliberately,
 so an update to the vendored content is a deliberate, reviewed pull, not something that happens on
 its own.
+
+## License
+
+MIT — see `LICENSE`. That covers this repo's own original content: the `agents-with-taste` router
+skill and the `hooks/` directory (`hooks.json`, `taste-nudge.sh`). It does not cover the vendored
+`skills/{emil-design-eng,animate,animate-expo,apple-design,animation-vocabulary,ask-sonner,
+find-animation-opportunities,improve-animations,mobile-native,pick-ui-library,prototype,
+review-animations,write-swift}/` directories, which are Emil Kowalski's own work, vendored
+unmodified from [emilkowalski/skill](https://github.com/emilkowalski/skill) — also MIT, but under
+his own copyright; see `EMIL-KOWALSKI-LICENSE`.
