@@ -1,0 +1,18 @@
+{
+  "description": "A PostToolUse[Edit|Write] reminder toward Emil Kowalski's design-engineering skill family, tailored to whatever impeccable's own detector finds on the just-edited file when impeccable happens to be set up for that project - a motion/easing finding points at animate/review-animations, any other visual finding points at emil-design-eng/apple-design, no impeccable install or a clean scan falls back to a generic reminder. Fires once per session per project, never invokes a skill itself - only injects a reminder into context.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/taste-nudge.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking design-taste relevance"
+          }
+        ]
+      }
+    ]
+  }
+}

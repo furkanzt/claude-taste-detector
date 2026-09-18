@@ -1,0 +1,13 @@
+{
+  "name": "taste-detector",
+  "version": "1.0.0",
+  "description": "Emil Kowalski's full design-engineering skill family (animation, motion, component-craft, native mobile-web feel, Expo, Sonner, Swift), vendored and auto-invoking, plus a global PostToolUse hook that runs impeccable's own detector on every UI edit and turns whatever it finds into a nudge toward the right skill in the family - never invokes a skill itself, only makes the reminder and its targeting deterministic instead of relying on memory.",
+  "author": {
+    "name": "M. Furkan Özateş",
+    "url": "https://github.com/furkanzt"
+  },
+  "homepage": "https://github.com/furkanzt/claude-taste-detector",
+  "repository": "https://github.com/furkanzt/claude-taste-detector",
+  "license": "MIT",
+  "keywords": ["design", "animation", "motion", "taste", "impeccable", "emil-kowalski", "hooks", "ui", "ux"]
+}
