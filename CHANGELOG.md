@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.1.0 — 2026-09-22
+
+Restructured so the family actually fires. In the four days after 1.0.0, three real nudges led
+to one skill load, and the router's second hop was broken outright.
+
+- **Fixed: the router pointed at sub-skills by bare name** (`emil-design-eng`, `animate`, …).
+  With same-named user-level copies switched off in `skillOverrides`, that hop failed with
+  "Skill emil-design-eng is disabled for model invocation". The router now reads each guide's
+  `SKILL.md` by path, so there is no second `Skill()` call left to fail.
+- **One entry point.** `agents-with-taste` is the only model-invoked skill; the 10 guides it
+  routes to carry `disable-model-invocation: true` (a one-line local change to the vendored
+  files, documented in the README) and stay typeable as `/taste-detector:<guide>`. About 1.6k
+  tokens a session come off the skill menu, along with ten descriptions that competed with
+  impeccable's.
+- **Router rewritten** trigger-first around *motion / feel / juice*, with a routing table,
+  completion criteria, and the impeccable split stated as where/why vs. how. The description drops
+  from 958 to about 440 characters. Maintainer notes moved to the README.
+- **New `SessionStart` pointer** (`hooks/session-pointer.sh`): one line in repos with UI code and
+  in empty folders, silent in backend-only repos and where declined. An always-loaded pointer
+  doesn't depend on a description winning the menu match.
+- **Gate is on by default.** Only `"declined"` silences the plugin; the greenfield-vs-shipped
+  question and the per-session impeccable-setup question are gone.
+- **First UI edit in an unwired project** (`reference/first-ui-edit.md`, replacing
+  `impeccable-setup.md`): the nudge scans the file with impeccable's detector and starts one
+  question. On yes, Claude wires impeccable, then re-checks and applies the guides to *that same
+  change*, not only later ones.
+- **`hooks/wire-impeccable.sh`**: wires impeccable's own per-project auto-check by symlinking the
+  global install and registering the exact hook commands its installer writes. `impeccable install
+  --project` downloads a bundle (which timed out when tried) and copies 14 MB into the repo; the
+  symlink needs neither. Idempotent, and it gitignores what it adds.
+- **Nudge wording** is now finding-aware and names `taste-detector:agents-with-taste` instead of
+  the unreachable bare guide names.
+- **`tests/hooks.test.sh`**: 18 pipe tests over all three hook scripts.
+
 ## 1.0.0 — 2026-09-18
 
 Initial release, developed and verified against `arrow-escape` before this repo existed:

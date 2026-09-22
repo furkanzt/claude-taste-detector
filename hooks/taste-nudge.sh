@@ -1,27 +1,24 @@
 #!/bin/bash
-# PostToolUse[Edit|Write] reminder toward agents-with-taste (Emil Kowalski's design-engineering
-# skill family), made finding-aware: runs impeccable's own detector directly on the just-edited
-# file (not impeccable's cache - reading a separate hook's cache would race whichever hook the
-# harness happens to run second; this sidesteps the race entirely at the cost of scanning the
-# file twice when impeccable's own project-local hook also runs) and tailors the nudge to what it
-# actually found, instead of always showing the same generic line. A hook can inject context, not
-# invoke a skill directly - the actual call to load a skill stays a judgment call each time; this
-# only makes both the reminder AND its content deterministic instead of relying on memory.
+# PostToolUse[Edit|Write], once per session, on the first UI-file edit. Two jobs:
 #
-# This hook is registered GLOBALLY by this plugin (hooks/hooks.json) - it runs in every project
-# the moment the plugin is installed, unlike impeccable's own hook which needs a project-local
-# install to exist at all. Both facts matter here: impeccable may or may not be available for
-# CLAUDE_PROJECT_DIR, project-locally or only globally, or not at all - this script degrades
-# through all three rather than assuming any one of them.
+# 1. First UI edit in a project where impeccable's own auto-check isn't wired and the taste gate is
+#    undecided: point Claude at reference/first-ui-edit.md, which asks the user ONCE and, on yes,
+#    wires impeccable (hooks/wire-impeccable.sh), re-checks the change just made, and applies
+#    agents-with-taste to it - so the first edit is covered, not only the ones after it.
+# 2. Everywhere else: a finding-aware nudge toward agents-with-taste. It runs impeccable's detector
+#    on the just-edited file itself (not impeccable's cache - reading another hook's cache would
+#    race whichever hook the harness runs second) and names the guide that fits what it found.
 #
-# Fires once per session (a sentinel keyed by session_id), matching agents-with-taste's own
-# stated cadence on an already-shipped surface: "asks once per project before applying, then
-# remembers the answer" - every edit would be noise.
+# Registered globally by this plugin, so it cannot assume impeccable exists for this project: the
+# detector lookup falls back project-local -> this machine's global install -> PATH -> none.
+# A hook can only inject context; loading the skill stays Claude's call.
 set -euo pipefail
 
 INPUT="$(cat)"
 FILE="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_response.filePath // empty' 2>/dev/null || true)"
 SESSION="$(echo "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || true)"
+PROJECT="${CLAUDE_PROJECT_DIR:-$PWD}"
+ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 [ -z "$FILE" ] && exit 0
 
@@ -32,26 +29,17 @@ esac
 
 SENTINEL="/tmp/claude-taste-nudge-${SESSION}"
 [ -f "$SENTINEL" ] && exit 0
-
-# agents-with-taste's own per-project consent gate - "declined" is an explicit, considered
-# answer, not an oversight, and re-nudging around it every session would just be nagging past a
-# decision that was already made deliberately.
-GATE="${CLAUDE_PROJECT_DIR:-.}/.agents-with-taste/state.local.json"
-if [ -f "$GATE" ]; then
-  STATUS="$(jq -r '.status // empty' "$GATE" 2>/dev/null || true)"
-  if [ "$STATUS" = "declined" ]; then
-    touch "$SENTINEL"
-    exit 0
-  fi
-fi
 touch "$SENTINEL"
 
-# Three-way fallback: this project's own local install, this MACHINE's global install, or none.
-# Unlike a per-project hand-wired version of this hook, this one is installed once for every
-# project on the machine, so it cannot assume CLAUDE_PROJECT_DIR has impeccable installed at all.
+# Taste is on by default; only an explicit "declined" silences it.
+STATUS=""
+GATE="$PROJECT/.agents-with-taste/state.local.json"
+[ -f "$GATE" ] && STATUS="$(jq -r '.status // empty' "$GATE" 2>/dev/null || true)"
+[ "$STATUS" = "declined" ] && exit 0
+
 IMPECCABLE=""
 for candidate in \
-  "${CLAUDE_PROJECT_DIR:-.}/.claude/skills/impeccable/scripts/impeccable" \
+  "$PROJECT/.claude/skills/impeccable/scripts/impeccable" \
   "$HOME/.claude/skills/impeccable/scripts/impeccable"; do
   if [ -x "$candidate" ]; then
     IMPECCABLE="$candidate"
@@ -62,32 +50,41 @@ if [ -z "$IMPECCABLE" ] && command -v impeccable >/dev/null 2>&1; then
   IMPECCABLE="$(command -v impeccable)"
 fi
 
+# "Wired" = impeccable's own hook is registered for this project, not merely installed somewhere.
+WIRED=0
+if [ -x "$PROJECT/.claude/skills/impeccable/scripts/impeccable" ] \
+  && grep -q 'skills/impeccable/scripts/impeccable' "$PROJECT/.claude/settings.local.json" "$PROJECT/.claude/settings.json" 2>/dev/null; then
+  WIRED=1
+fi
+
 FINDINGS="[]"
 if [ -n "$IMPECCABLE" ] && [ -f "$FILE" ]; then
-  # `detect` exits 2 (not 0) when it finds real issues - that is a MEANINGFUL result, not a
-  # failure, and its JSON is still on stdout either way. `|| echo "[]"` INSIDE the substitution
-  # would run on that exit 2 too, concatenating both branches' stdout into garbage. `|| true`
-  # OUTSIDE the substitution captures stdout unconditionally and only neutralizes set -e.
+  # `detect` exits 2 (not 0) when it finds real issues - a meaningful result, with the JSON still
+  # on stdout. `|| true` OUTSIDE the substitution keeps that stdout; `|| echo "[]"` inside it would
+  # concatenate both branches into garbage.
   FINDINGS="$("$IMPECCABLE" detect --json "$FILE" 2>/dev/null)" || true
   echo "$FINDINGS" | jq -e . >/dev/null 2>&1 || FINDINGS="[]"
 fi
 
-# Loose keyword match on the antipattern id, deliberately not an exhaustive enum - impeccable's
-# rule set is proprietary and can grow; a substring match on the motion-shaped ones is more
-# robust to that than a hardcoded list that silently stops matching new rule ids.
-MOTION_COUNT="$(echo "$FINDINGS" | jq '[.[] | select(.antipattern | test("bounce|easing|animat|motion|transition|spring"; "i"))] | length' 2>/dev/null || echo 0)"
-TOTAL_COUNT="$(echo "$FINDINGS" | jq 'length' 2>/dev/null || echo 0)"
+# Loose keyword match on antipattern ids - impeccable's rule set can grow, and a substring match on
+# the motion-shaped ones survives new ids that a hardcoded list would silently miss.
+MOTION_RE='bounce|easing|animat|motion|transition|spring'
+MOTION_IDS="$(echo "$FINDINGS" | jq -r --arg re "$MOTION_RE" '[.[] | select(.antipattern | test($re; "i")) | .antipattern] | unique | join(", ")' 2>/dev/null || true)"
+ALL_IDS="$(echo "$FINDINGS" | jq -r '[.[] | .antipattern] | unique | join(", ")' 2>/dev/null || true)"
+NAME="$(basename "$FILE")"
 
-if [ "${MOTION_COUNT:-0}" -gt 0 ] 2>/dev/null; then
-  IDS="$(echo "$FINDINGS" | jq -r '[.[] | select(.antipattern | test("bounce|easing|animat|motion|transition|spring"; "i")) | .antipattern] | unique | join(", ")')"
-  MSG="Impeccable flagged a motion/easing issue in this UI file ($IDS). Consider the animate or review-animations skill specifically - Emil Kowalski's motion-craft judgment - before finishing this session's UI work."
-elif [ "${TOTAL_COUNT:-0}" -gt 0 ] 2>/dev/null; then
-  IDS="$(echo "$FINDINGS" | jq -r '[.[] | .antipattern] | unique | join(", ")')"
-  MSG="Impeccable flagged visual design issues in this UI file ($IDS). Consider the emil-design-eng or apple-design skill - Emil Kowalski's design-engineering judgment - before finishing this session's UI work."
-elif [ -n "$IMPECCABLE" ]; then
-  MSG="This session touched UI code, and impeccable's scan came back clean here. If any of this session's work is new UI, animation, micro-interaction, or game-feel creation - not just a mechanical fix - consider loading the agents-with-taste skill (Emil Kowalski's design-engineering judgment) before finishing. Shown once per session."
+if [ "$WIRED" = 0 ] && [ -z "$STATUS" ]; then
+  if [ -n "$ALL_IDS" ]; then SCAN=" impeccable's scan of $NAME found: $ALL_IDS."
+  elif [ -n "$IMPECCABLE" ]; then SCAN=" impeccable's scan of $NAME came back clean."
+  else SCAN=" impeccable isn't installed on this machine, so there is no scan."
+  fi
+  MSG="[taste-detector] First UI edit in this project, and impeccable's auto-check isn't set up here.$SCAN Before your next step, follow $ROOT/skills/agents-with-taste/reference/first-ui-edit.md: ask the user once; on yes run \"$ROOT/hooks/wire-impeccable.sh\" \"$PROJECT\", re-check every UI file changed this session${IMPECCABLE:+ with \"$IMPECCABLE\" detect --json <files>}, and apply taste-detector:agents-with-taste to that same change."
+elif [ -n "$MOTION_IDS" ]; then
+  MSG="[taste-detector] impeccable flagged motion issues in $NAME ($MOTION_IDS). Load taste-detector:agents-with-taste now and fix them with its animate and emil-design-eng guides before continuing."
+elif [ -n "$ALL_IDS" ]; then
+  MSG="[taste-detector] impeccable flagged $ALL_IDS in $NAME. If any of them touch press/hover feedback, transitions, or feel, load taste-detector:agents-with-taste (emil-design-eng guide) while fixing them."
 else
-  MSG="This session touched UI code. impeccable isn't set up for this project, so this reminder can't point at a specific finding - if any of this session's work is new UI, animation, micro-interaction, or game-feel creation, consider loading the agents-with-taste skill (Emil Kowalski's design-engineering judgment) before finishing. Shown once per session."
+  MSG="[taste-detector] UI file edited. If this change adds or alters motion, press/hover feedback, transitions, or game feel, load taste-detector:agents-with-taste before your next edit; text- or layout-only changes need nothing further."
 fi
 
 jq -n --arg msg "$MSG" '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$msg}}'

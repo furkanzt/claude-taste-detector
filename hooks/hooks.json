@@ -1,6 +1,18 @@
 {
-  "description": "A PostToolUse[Edit|Write] reminder toward Emil Kowalski's design-engineering skill family, tailored to whatever impeccable's own detector finds on the just-edited file when impeccable happens to be set up for that project - a motion/easing finding points at animate/review-animations, any other visual finding points at emil-design-eng/apple-design, no impeccable install or a clean scan falls back to a generic reminder. Fires once per session per project, never invokes a skill itself - only injects a reminder into context.",
+  "description": "SessionStart: a one-line pointer to agents-with-taste in repos with UI code and in empty folders, silent in backend-only repos and where the taste gate is declined. PostToolUse[Edit|Write], once per session: runs impeccable's detector on the first UI file edited and names the guide that fits; in a project where impeccable's own auto-check isn't wired and the gate is undecided, it starts the one-question setup instead. Hooks only inject context - loading the skill stays Claude's call.",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-pointer.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",

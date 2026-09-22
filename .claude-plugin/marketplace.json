@@ -10,9 +10,16 @@
     {
       "name": "taste-detector",
       "source": ".",
-      "description": "Emil Kowalski's full design-engineering skill family, vendored and auto-invoking, plus a global hook that nudges toward the right one based on what impeccable's detector actually found.",
+      "description": "Emil Kowalski's motion-and-feel rules for UI and games, routed through one skill and wired to impeccable's detector.",
       "category": "productivity",
-      "keywords": ["design", "animation", "motion", "taste", "impeccable", "hooks"]
+      "keywords": [
+        "design",
+        "animation",
+        "motion",
+        "taste",
+        "impeccable",
+        "hooks"
+      ]
     }
   ]
 }
