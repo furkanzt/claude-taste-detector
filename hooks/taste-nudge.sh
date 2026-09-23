@@ -78,7 +78,7 @@ if [ "$WIRED" = 0 ] && [ -z "$STATUS" ]; then
   elif [ -n "$IMPECCABLE" ]; then SCAN=" impeccable's scan of $NAME came back clean."
   else SCAN=" impeccable isn't installed on this machine, so there is no scan."
   fi
-  MSG="[taste-detector] First UI edit in this project, and impeccable's auto-check isn't set up here.$SCAN Before your next step, follow $ROOT/skills/agents-with-taste/reference/first-ui-edit.md: ask the user once; on yes run \"$ROOT/hooks/wire-impeccable.sh\" \"$PROJECT\", re-check every UI file changed this session${IMPECCABLE:+ with \"$IMPECCABLE\" detect --json <files>}, and apply taste-detector:agents-with-taste to that same change."
+  MSG="[taste-detector] First UI edit in this project, and impeccable's auto-check isn't set up here.$SCAN Before your next step, follow $ROOT/skills/agents-with-taste/reference/first-ui-edit.md: ask the user once; on yes run \"$ROOT/hooks/wire-impeccable.sh\" \"$PROJECT\" \"$FILE\" <every other UI file changed this session> - it wires impeccable and re-checks those files - then triage what it reports and apply taste-detector:agents-with-taste to that same change."
 elif [ -n "$MOTION_IDS" ]; then
   MSG="[taste-detector] impeccable flagged motion issues in $NAME ($MOTION_IDS). Load taste-detector:agents-with-taste now and fix them with its animate and emil-design-eng guides before continuing."
 elif [ -n "$ALL_IDS" ]; then

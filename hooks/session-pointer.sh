@@ -19,7 +19,7 @@ elif [ -n "$(find "$P" -maxdepth 4 \
     \( -name node_modules -o -name .git -o -name dist -o -name build -o -name .next -o -name vendor -o -name bin -o -name obj \) -prune \
     -o -type f \( -name '*.tsx' -o -name '*.jsx' -o -name '*.vue' -o -name '*.svelte' -o -name '*.astro' \
     -o -name '*.css' -o -name '*.scss' -o -name '*.html' -o -name '*.cshtml' -o -name '*.swift' \) -print -quit 2>/dev/null)" ]; then
-  MSG="[taste-detector] This repo has UI code. For any motion, animation, transition, press/hover feedback, gesture, game-feel, or touch-feel decision, load the taste-detector:agents-with-taste skill before writing that code - impeccable decides where motion goes, its guides decide how it moves."
+  MSG="[taste-detector] This repo has UI code. For any motion, animation, transition, press/hover feedback, gesture, game-feel, or touch-feel decision, load the taste-detector:agents-with-taste skill before writing that code, and before naming a motion effect - impeccable decides where motion goes, its guides decide how it moves."
 else
   exit 0
 fi

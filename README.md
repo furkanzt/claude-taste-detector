@@ -86,6 +86,13 @@ deliberate, reviewed pull. The GitHub archive for a pinned commit extracts to `s
 push. Everyone with the marketplace added picks it up on their next Claude Code startup.
 
 **Tests.** `tests/hooks.test.sh` pipe-tests all three hook scripts against throwaway fixtures.
+`tests/eval/run.sh <label> <installed|repo> [model …]` is the routing eval. It runs the prompts in
+`tests/eval/prompts.tsv` headlessly against throwaway copies of a UI project, then scores whether
+Claude reached `agents-with-taste`, the right guide, and impeccable, and whether it stayed quiet on
+the negative controls. `repo` loads this working tree in place of the installed plugin, so a change
+can be proven before it ships. Heavy prompts cost roughly $2–5 each on Opus; `EVAL_ONLY="P2|P5"`
+re-runs just the ones you touched. Headless sessions have no question tool, so the first-edit
+*question* can only be checked live; P9 answers "yes" inside its prompt to test the wiring path.
 
 ## Relationship to `claude-agenting`
 

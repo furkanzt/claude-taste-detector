@@ -15,7 +15,7 @@ Emil Kowalski's motion and feel rules, shipped as ten guides beside this skill. 
    - User says "no taste here" → write `{"status": "declined", "decidedAt": "<today>"}` and add `/.agents-with-taste/` to `.gitignore`.
    - User says "turn taste on here" → write `{"status": "consented", "decidedAt": "<today>"}`.
 
-2. **Pick and read the guides.** Each lives at `<this skill's base directory>/../<guide>/SKILL.md`. Most tasks need one or two.
+2. **Pick and read the guides.** When the request leaves open *which* moments should move — make a screen or moment juicier, nicer, or more polished — load `impeccable` first if it hasn't run this session: it decides where and why motion goes, and you pick guides for each moment it chooses. When the user already named the exact moment, go straight to the table. Each guide lives at `<this skill's base directory>/../<guide>/SKILL.md`. Most tasks need one or two.
 
    | The task is about… | Read |
    |---|---|
@@ -38,7 +38,7 @@ Emil Kowalski's motion and feel rules, shipped as ten guides beside this skill. 
 
 ## With impeccable
 
-impeccable leads the overall design pass — layout, colour, type, UX, accessibility — and picks which moments earn motion. Run step 3 on each moment it picks. One review per concern: impeccable critiques the design, the guides settle the motion.
+impeccable owns layout, colour, type, UX, and accessibility, and picks which moments earn motion (step 2 loads it for open-ended requests). Run step 3 on each moment it picks. One review per concern: impeccable critiques the design, the guides settle the motion.
 
 To wire impeccable's own per-project auto-check, follow [reference/first-ui-edit.md](reference/first-ui-edit.md).
 

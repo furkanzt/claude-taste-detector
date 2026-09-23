@@ -7,14 +7,13 @@ The nudge message carries the absolute paths used below. Reached from the skill 
 1. **Ask once** with the question tool: "impeccable's auto-check and Emil's motion rules aren't set up for <project> yet. Set them up now? It covers the change I just made." Options: **Yes (Recommended)** / **No, not in this project**.
 
 2. **Yes:**
-   1. Run `wire-impeccable.sh "<project dir>"`. It links the global impeccable into the project, registers impeccable's two hooks in `.claude/settings.local.json`, and gitignores both. Claude Code may show a permission prompt for the settings file; that is expected. Relay its output to the user in one line.
-   2. Write `.agents-with-taste/state.local.json` = `{"status": "consented", "decidedAt": "<today>"}` and gitignore `/.agents-with-taste/`.
-   3. Re-check every UI file you changed this session: `<impeccable> detect --json <files>` (exit code 2 means findings, not failure). Triage each finding the way impeccable's hook asks: fix it, suppress it through `impeccable hooks ignore-*` with a reason, or leave it standing — and say which.
-   4. Load `taste-detector:agents-with-taste` and run its steps on that same change.
+   1. Run `wire-impeccable.sh "<project dir>" <every UI file you changed this session>`. It links the global impeccable into the project, registers impeccable's two hooks in `.claude/settings.local.json`, gitignores both inside an existing git repo, then re-checks the files you passed with impeccable's detector. Claude Code may show a permission prompt for the settings file; that is expected. Relay the wiring lines to the user in one line, and leave version control as the user has it.
+   2. Triage every finding the re-check printed the way impeccable's hook asks: fix it, suppress it through `impeccable hooks ignore-*` with a reason, or leave it standing — and say which.
+   3. Load `taste-detector:agents-with-taste` and run its steps on that same change.
 
-   Done when the script reported success, every UI file changed this session was re-checked with its findings triaged, and the motion in that change traces to a guide rule. impeccable's hook fires from the next edit on, in this same chat.
+   Done when the script reported success and a re-check line covering every UI file changed this session, its findings are triaged, and the motion in that change traces to a guide rule. impeccable's hook fires from the next edit on, in this same chat, and a wired project is never asked again.
 
-   If the script says impeccable isn't installed globally, skip wiring, tell the user the one-line install it printed, and still do steps 2 and 4.
+   If the script says impeccable isn't installed globally: tell the user the one-line install it printed, write `.agents-with-taste/state.local.json` = `{"status": "consented", "decidedAt": "<today>"}` (so the question isn't repeated while the project stays unwired), and still do step 3.
 
 3. **No:** write `{"status": "declined", "decidedAt": "<today>"}` to `.agents-with-taste/state.local.json`, gitignore `/.agents-with-taste/`, and carry on without these rules. The hooks stay silent in this project from then on.
 

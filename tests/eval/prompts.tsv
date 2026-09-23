@@ -1,0 +1,9 @@
+P1	arrow	When an arrow leaves the board, give it a little bounce as it escapes.
+P2	arrow	The wave-clear moment feels flat. Make it juicier.
+P3	arrow	Pressing an arrow piece feels laggy and dead. Make the press feel snappier.
+P4	arrow	On my phone, tapping an arrow flashes a grey box and double-tapping zooms the whole page. Fix that.
+P5	arrow	What's the name for the effect where a popover grows out of the exact point you clicked? Just answer, no code changes.
+P6	arrow	On the privacy page (app/gizlilik/page.tsx), change the main heading text to exactly: Gizlilik Politikası
+P7	arrow	Add a unit test for lib/runs.ts that covers an empty input.
+P8	empty	Create a simple landing page for a to-do app as plain index.html and styles.css in this folder.
+P9	empty	Create a simple landing page for a to-do app as plain index.html and styles.css in this folder. Write the page first. If after that you would ask me whether to set anything up for this project, my answer is yes - go ahead.

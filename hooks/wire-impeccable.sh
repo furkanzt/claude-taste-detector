@@ -4,11 +4,14 @@
 # drops a 14 MB copy into the repo. Instead it symlinks this machine's global impeccable into the
 # project and registers the exact hook commands impeccable's installer writes, so impeccable's own
 # `doctor` sees the manifest it expects. Idempotent; prints one line per change it made.
+# Any UI files passed after the project dir are re-checked with impeccable's detector once wiring
+# is done, so the change that triggered the setup is covered, not only the edits after it.
 #
-# usage: wire-impeccable.sh [project-dir]   (default: $CLAUDE_PROJECT_DIR, then $PWD)
+# usage: wire-impeccable.sh [project-dir] [ui-file ...]   (default dir: $CLAUDE_PROJECT_DIR, then $PWD)
 set -euo pipefail
 
 P="${1:-${CLAUDE_PROJECT_DIR:-$PWD}}"
+[ $# -gt 0 ] && shift
 G="$HOME/.claude/skills/impeccable"
 
 if [ ! -x "$G/scripts/impeccable" ]; then
@@ -61,4 +64,20 @@ if git -C "$P" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       echo "gitignored /$rel"
     fi
   done
+else
+  echo "not a git repo - no .gitignore to update; leave version control to the user"
+fi
+
+FILES=()
+for f in "$@"; do [ -f "$f" ] && FILES+=("$f"); done
+if [ ${#FILES[@]} -gt 0 ]; then
+  # detect exits 2 when it finds issues; the JSON is on stdout either way.
+  FINDINGS="$("$G/scripts/impeccable" detect --json "${FILES[@]}" 2>/dev/null)" || true
+  IDS="$(echo "$FINDINGS" | jq -r '[.[] | .antipattern] | unique | join(", ")' 2>/dev/null || true)"
+  if [ -n "$IDS" ]; then
+    echo "re-checked ${#FILES[@]} file(s): $IDS - triage each (fix / suppress with a reason / leave) and say which:"
+    echo "$FINDINGS" | jq -c '.[] | {file, line, antipattern}' 2>/dev/null || echo "$FINDINGS"
+  else
+    echo "re-checked ${#FILES[@]} file(s): clean"
+  fi
 fi

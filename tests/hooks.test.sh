@@ -61,6 +61,14 @@ if [ -x "$IMP" ]; then
   check "nudge: wired project names impeccable's finding" "$(nudge "$TMP/wire" "$TMP/wire/bad.css" e)" "gradient-text"
   echo '.ok { color: #111; }' > "$TMP/wire/ok.css"
   check "nudge: wired + clean gives the conditional pointer" "$(nudge "$TMP/wire" "$TMP/wire/ok.css" f)" "text- or layout-only changes need nothing further"
+  mkdir -p "$TMP/wire2" && git -C "$TMP/wire2" init -q
+  printf '.t { background: linear-gradient(45deg,#f0f,#0ff); -webkit-background-clip: text; color: transparent; }\n' > "$TMP/wire2/first.css"
+  check "wire: re-checks the files it is given" "$("$ROOT/hooks/wire-impeccable.sh" "$TMP/wire2" "$TMP/wire2/first.css")" "re-checked 1 file(s): gradient-text"
+  echo '.ok { color: #111; }' > "$TMP/wire2/clean.css"
+  check "wire: reports a clean re-check" "$("$ROOT/hooks/wire-impeccable.sh" "$TMP/wire2" "$TMP/wire2/clean.css")" "re-checked 1 file(s): clean"
+  mkdir -p "$TMP/nogit"
+  check "wire: outside git it leaves version control alone" "$("$ROOT/hooks/wire-impeccable.sh" "$TMP/nogit")" "not a git repo"
+  check "wire: outside git it writes no .gitignore" "$([ -e "$TMP/nogit/.gitignore" ] && echo present)" "<empty>"
 else
   echo "skip wire-impeccable tests - impeccable isn't installed globally at $IMP"
 fi

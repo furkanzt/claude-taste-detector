@@ -3,12 +3,13 @@
 ## 1.1.0 — 2026-09-22
 
 Restructured so the family actually fires. In the four days after 1.0.0, three real nudges led
-to one skill load, and the router's second hop was broken outright.
+to one skill load, and the router's second hop could fail.
 
-- **Fixed: the router pointed at sub-skills by bare name** (`emil-design-eng`, `animate`, …).
-  With same-named user-level copies switched off in `skillOverrides`, that hop failed with
-  "Skill emil-design-eng is disabled for model invocation". The router now reads each guide's
-  `SKILL.md` by path, so there is no second `Skill()` call left to fail.
+- **Fixed: the router named sub-skills by bare name** (`emil-design-eng`, `animate`, …).
+  With same-named user-level copies switched off in `skillOverrides`, a bare-name call failed
+  with "Skill emil-design-eng is disabled for model invocation". In practice Claude usually used
+  the full listed name instead. The router now reads each guide's `SKILL.md` by path, so there is
+  no second `Skill()` call left to fail.
 - **One entry point.** `agents-with-taste` is the only model-invoked skill; the 10 guides it
   routes to carry `disable-model-invocation: true` (a one-line local change to the vendored
   files, documented in the README) and stay typeable as `/taste-detector:<guide>`. About 1.6k
@@ -16,7 +17,7 @@ to one skill load, and the router's second hop was broken outright.
   impeccable's.
 - **Router rewritten** trigger-first around *motion / feel / juice*, with a routing table,
   completion criteria, and the impeccable split stated as where/why vs. how. The description drops
-  from 958 to about 440 characters. Maintainer notes moved to the README.
+  from 958 to 430 characters. Maintainer notes moved to the README.
 - **New `SessionStart` pointer** (`hooks/session-pointer.sh`): one line in repos with UI code and
   in empty folders, silent in backend-only repos and where declined. An always-loaded pointer
   doesn't depend on a description winning the menu match.
@@ -32,7 +33,23 @@ to one skill load, and the router's second hop was broken outright.
   symlink needs neither. Idempotent, and it gitignores what it adds.
 - **Nudge wording** is now finding-aware and names `taste-detector:agents-with-taste` instead of
   the unreachable bare guide names.
-- **`tests/hooks.test.sh`**: 18 pipe tests over all three hook scripts.
+- **`tests/hooks.test.sh`**: 22 pipe tests over all three hook scripts, including a mutation-checked
+  "no `.gitignore` outside git" case.
+- **`tests/eval/`**: a headless routing eval. 1.0.0 → 1.1.0 moved Opus 5.5 from 6/8 to 7/8 and
+  Sonnet 5 from 4/8 to 6/8. The new-project prompt went from FAIL to PASS on both models through
+  the pointer alone. Fixes driven by the eval:
+  - The router loads impeccable first when a request leaves open *which* moments should move
+    (juicier, nicer, more polished) and skips it when the user already named the moment.
+  - The pointer also covers "what's this effect called?". Sonnet still answers those from memory,
+    and less accurately than the `animation-vocabulary` guide.
+  - The first-edit flow writes `consented` only when wiring fails, because a wired project is
+    never asked again anyway. `wire-impeccable.sh` now says so when a folder isn't a git repo,
+    after one run `git init`-ed an empty folder to get the gitignore protection.
+  - `wire-impeccable.sh` takes the UI files changed so far and re-checks them itself once
+    wiring is done, so covering the first change no longer depends on Claude remembering a step.
+    Under a strict P9 (edit → wire → re-check covering that edit), Sonnet 5 passes. Opus 5.5
+    re-checked and applied taste but hadn't wired by the 20-turn cap. Headless runs have no
+    question tool, so the ask → yes path itself needs a live check.
 
 ## 1.0.0 — 2026-09-18
 
